@@ -1,0 +1,10 @@
+canvas {
+  background-image: url(img/background.webp);
+  background-repeat: no-repeat;
+  background-size: 700px 300px;
+  background-position: center;
+}
+
+img {
+  mix-blend-mode: multiply;
+}
