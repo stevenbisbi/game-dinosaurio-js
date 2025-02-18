@@ -1,6 +1,16 @@
 document.addEventListener("keydown", function (evento) {
   if (evento.keyCode == 32) {
     jump();
+
+    if (level.dead == false) jump();
+    else {
+      level.velocidad = 9;
+      level.dead = false;
+      cloud.velocidad = 1;
+      cactus.x = width + 100;
+      level.point = 0;
+      cloud.x = 400;
+    }
   }
 });
 
@@ -11,18 +21,13 @@ function loadImage() {
   imgCloud = new Image();
   imgCactus = new Image();
   imgFloor = new Image();
+  imgRestart = new Image();
 
   imgRex.src = "img/rex.png";
   imgCloud.src = "img/cloud.png";
   imgCactus.src = "img/cactus.png";
   imgFloor.src = "img/floor.png";
-
-  // Establece el tamaño deseado
-  tempCanvas.width = 38;
-  tempCanvas.height = 75;
-
-  tempCtx.drawImage(imgCactus, 0, 0, 38, 75);
-  imgCactus.src = tempCanvas.toDataURL(); // Guarda la imagen redimensionada
+  imgRestart.src = "img/restart.png";
 }
 
 const width = 700;
@@ -52,12 +57,14 @@ const tRex = {
 };
 const level = { velocidad: 9, point: 0, dead: false };
 const cactus = { x: width + 100, y: floor + 10 };
-const cloud = { x: 400, y: 100 };
+const cloud = { x: 400, y: 100, velocidad: 1 };
 const floorG = { x: 0, y: floor + 30 };
 
 function jump() {
-  tRex.jumping = true;
-  tRex.vy = tRex.jump;
+  if (!tRex.jumping) {
+    tRex.jumping = true;
+    tRex.vy = tRex.jump;
+  }
 }
 
 function gravedad() {
@@ -79,6 +86,7 @@ function drawRex() {
 
 function drawCactus() {
   ctx.drawImage(imgCactus, 0, 0, 38, 75, cactus.x, cactus.y - 30, 57, 90);
+  ctx.drawImage(imgCactus, 0, 0, 38, 75, cactus.x + 220, cactus.y - 30, 57, 90);
 }
 
 function cactusLogic() {
@@ -100,7 +108,7 @@ function cloudLogic() {
   if (cloud.x < -350) {
     cloud.x = width + 100;
   } else {
-    cloud.x -= 2;
+    cloud.x -= cloud.velocidad;
   }
 }
 
@@ -116,6 +124,52 @@ function floorLogic() {
   }
 }
 
+function collision() {
+  //catus.x
+  //tRex.y
+  if (
+    (cactus.x >= 100 && cactus.x <= 150) ||
+    (cactus.x + 250 >= 100 && cactus.x + 250 <= 150)
+  ) {
+    if (tRex.y + 50 >= cactus.y - 30) {
+      level.dead = true;
+      level.velocidad = 0;
+      cloud.velocidad = 0;
+    } else {
+      level.point++;
+    }
+  }
+}
+
+function points() {
+  if (level.dead == false) {
+    level.point++;
+  }
+  ctx.font = "30px impact"; //Establecer la fuente
+  ctx.fillStyle = "#555555"; //Establecer el color
+  ctx.fillText(`${level.point}`, 600, 50); //Escribir el texto
+
+  if (level.dead == true) {
+    ctx.font = "60px impact";
+    ctx.fillStyle = "#555555"; //Establecer el color
+    ctx.fillText(`GAME OVER`, 240, 100);
+    ctx.font = "30px impact";
+    ctx.fillText(`PRESS TO SPACE TO RESTART`, 205, 135);
+  }
+}
+
+function difficult() {
+  if (level.point == 500) {
+    level.velocidad = 12;
+  }
+}
+
+function drawRestart() {
+  if (level.dead == true) {
+    ctx.drawImage(imgRestart, 0, 0, 38, 75, 350, floor - 50, 57, 90);
+  }
+}
+
 //Main bucle
 var FPS = 50;
 
@@ -127,6 +181,7 @@ setInterval(function () {
 function main() {
   deleteCanvas();
   gravedad();
+  collision();
   cloudLogic();
   drawCloud();
   cactusLogic();
@@ -134,4 +189,7 @@ function main() {
   drawRex();
   floorLogic();
   drawFloor();
+  points();
+  difficult();
+  drawRestart();
 }
